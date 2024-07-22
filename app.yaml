@@ -1,10 +1,18 @@
 # [START app_yaml]
 runtime: nodejs18
 
-service: my-next-app
+#service: default
 
+# Ensure your application handles all routes
 handlers:
   - url: /.*
     secure: always
     script: auto
+# Optional: You can specify the instance class and scaling options if needed
+# instance_class: F1
+# automatic_scaling:
+#   target_cpu_utilization: 0.65
+#   target_throughput_utilization: 0.75
+#   min_instances: 1
+#   max_instances: 5
 # [END app_yaml]
