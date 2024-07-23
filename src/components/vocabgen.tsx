@@ -1,9 +1,11 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Mic, MicOff } from "lucide-react";
 import { useMicrophone } from "@/hooks/useMicrophonePermissions";
 import axios from "axios";
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 export default function VocabGen() {
   const [vocabWord, setVocabWord] = useState<string>("hello world");
@@ -34,10 +36,9 @@ export default function VocabGen() {
     //setVocabWord(vocabJson[0]);
   };
 
-  const microphoneButton = async () => {
-    setMicrophoneOn(!microphoneOn);
-    console.log("microphone toggled");
-    if (microphoneOn) {
+  const microphoneToggledOn = async () => {
+    console.log("microphone toggled on");
+    try {
       const currentAudioStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
@@ -49,11 +50,13 @@ export default function VocabGen() {
         console.log("currently recording");
         audioBlobs.push(event.data);
       };
-      mediaRecorder.current.onstop = async () => {
+      mediaRecorder.current!.onstop = async () => {
         try {
           const audioBlob = new Blob(audioBlobs, { type: "audio/wav" });
           const formData = new FormData();
           formData.append("file", audioBlob);
+          formData.append("model", "whisper-1");
+          formData.append("response_format", "text");
           const transcription = await axios.post("/api/transcribe", {
             body: formData,
           });
@@ -73,8 +76,68 @@ export default function VocabGen() {
           console.error(error);
         }
       };
+    } catch (error) {
+      console.error(error);
     }
   };
+
+  const microphoneToggledOff = async () => {
+    console.log("microphone toggled off");
+    mediaRecorder.current!.stop();
+  };
+
+  /*
+    const microphoneButton = async () => {
+      setMicrophoneOn(!microphoneOn);
+      console.log("microphone toggled");
+      if (microphoneOn) {
+        const currentAudioStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        mediaRecorder.current = new MediaRecorder(currentAudioStream, {
+          mimeType: "audio/webm",
+        });
+        mediaRecorder.current.start();
+        mediaRecorder.current.ondataavailable = (event: { data: BlobPart }) => {
+          console.log("currently recording");
+          audioBlobs.push(event.data);
+        };
+        mediaRecorder.current.onstop = async () => {
+          try {
+            const audioBlob = new Blob(audioBlobs, { type: "audio/wav" });
+            const formData = new FormData();
+            formData.append("file", audioBlob);
+            const transcription = await axios.post("/api/transcribe", {
+              body: formData,
+            });
+            const transcriptionText = transcription.data.transcription;
+            if (transcriptionText == vocabWord) {
+              setTimesPronouncedCorrect(timesPronouncedCorrect + 1);
+              if (timesPronouncedCorrect == 3) {
+                alert("you've pronounced it correctly 3 times! moving on");
+                setTimesPronouncedCorrect(0);
+                setVocabWord("");
+                setVocabWordDefinition("");
+              }
+            } else {
+              alert("incorrect. try again");
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        };
+      }
+    };
+    */
+  useEffect(() => {}, [vocabWord, vocabWordDefinition]);
+
+  useEffect(() => {
+    if (microphoneOn) {
+      microphoneToggledOn();
+    } else {
+      microphoneToggledOff();
+    }
+  }, [microphoneOn]);
 
   return (
     <div className="w-full h-screen bg-white dark:bg-gray-800 p-8">
@@ -91,13 +154,19 @@ export default function VocabGen() {
               {vocabWordDefinition}
             </div>
           </div>
-          <div className="flex-cols-2 flex justify-center justify-items-center">
+          <div className="flex-cols-2 flex justify-center justify-items-center p-8">
             <Button onClick={() => generateVocab()}> Generate </Button>
-            <Button onClick={() => microphoneButton()}>
-              {" "}
-              Open Mic
-              {microphoneOn ? <Mic /> : <MicOff />}
-            </Button>
+            <Switch
+              name="MicToggle"
+              checked={microphoneOn}
+              onCheckedChange={() => setMicrophoneOn(!microphoneOn)}
+            >
+              <Label htmlFor="airplane-mode">
+                Microphone {microphoneOn ? "on" : "off"}
+                {microphoneOn ? <Mic /> : <MicOff />}
+              </Label>
+            </Switch>
+            {microphoneOn ? <Mic /> : <MicOff />}
           </div>
         </div>
       </div>

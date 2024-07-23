@@ -17,7 +17,7 @@ export default async function POST(request: Request) {
           },
           {
             role: "system",
-            content: prompt || "",
+            content: userInput.data.prompt || "",
           },
           { role: "user", content: userInput.data.text },
         ],

@@ -9,15 +9,15 @@ module.exports = {
             // ...
             {
               from: "node_modules/@ricky0123/vad-web/dist/vad.worklet.bundle.min.js",
-              to: "static/chunks/pages",
+              to: "static/chunks/[name][ext]",
             },
             {
               from: "node_modules/@ricky0123/vad-web/dist/*.onnx",
-              to: "static/chunks/pages/[name][ext]",
+              to: "static/chunks/[name][ext]",
             },
             {
               from: "node_modules/onnxruntime-web/dist/*.wasm",
-              to: "static/chunks/pages/[name][ext]",
+              to: "static/chunks/[name][ext]",
             },
           ],
         }),
