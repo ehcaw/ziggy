@@ -17,5 +17,14 @@ export default function RedirectButton({
   const handleClick = () => {
     window.location.href = redirectPath;
   };
-  return <Button onClick={handleClick}>Practice</Button>;
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-7 gap-1 text-sm"
+      onClick={handleClick}
+    >
+      Practice
+    </Button>
+  );
 }

@@ -174,48 +174,27 @@ export function Dashboard() {
                 <div className="font-medium">Topic</div>
                 <div className="grid grid-cols-[1fr_auto] items-center gap-4">
                   <div>Ordering at a Restaurant</div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 gap-1 text-sm"
-                  >
+                  <RedirectButton redirectPath="/converse">
                     <div className="h-3.5 w-3.5" />
-                    <span>Practice</span>
-                  </Button>
-                  <RedirectButton redirectPath="/converse" />
+                  </RedirectButton>
                 </div>
                 <div className="grid grid-cols-[1fr_auto] items-center gap-4">
                   <div>Introducing Yourself</div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 gap-1 text-sm"
-                  >
+                  <RedirectButton redirectPath="/converse">
                     <div className="h-3.5 w-3.5" />
-                    <span>Practice</span>
-                  </Button>
+                  </RedirectButton>
                 </div>
                 <div className="grid grid-cols-[1fr_auto] items-center gap-4">
                   <div>Asking for Directions</div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 gap-1 text-sm"
-                  >
+                  <RedirectButton redirectPath="/converse">
                     <div className="h-3.5 w-3.5" />
-                    <span>Practice</span>
-                  </Button>
+                  </RedirectButton>
                 </div>
                 <div className="grid grid-cols-[1fr_auto] items-center gap-4">
                   <div>Discussing Hobbies</div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 gap-1 text-sm"
-                  >
+                  <RedirectButton redirectPath="/converse">
                     <div className="h-3.5 w-3.5" />
-                    <span>Practice</span>
-                  </Button>
+                  </RedirectButton>
                 </div>
               </div>
               <div className="grid gap-2">
