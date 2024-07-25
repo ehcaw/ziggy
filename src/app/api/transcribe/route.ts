@@ -1,31 +1,30 @@
-import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { Uploadable } from "openai/uploads.mjs";
+import OpenAI from "openai";
 
+const openaikey = process.env.OPENAI_SECRET_KEY;
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: openaikey,
 });
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const audioFile = formData.get("file");
+    console.log("audioblob", audioFile);
 
     if (!audioFile) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    const response = await openai.audio.transcriptions.create({
+    const transcription = await openai.audio.transcriptions.create({
       file: audioFile as Uploadable,
       model: "whisper-1",
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json({ transcription: transcription });
   } catch (error) {
     console.error("Error:", error);
-    return NextResponse.json(
-      { error: "An error occurred while processing your request" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: error }, { status: 500 });
   }
 }
