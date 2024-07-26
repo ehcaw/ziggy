@@ -7,8 +7,8 @@ export async function converse(audioBlobs: BlobPart[], prompt?: string) {
   formData.append("model", "whisper-1");
   formData.append("response_format", "text");
   const transcription = await axios.post("/api/transcribe", { body: formData });
-  const transcriptionText = transcription.data.transcription;
-
+  const transcriptionText = transcription.data.transcription.text;
+  console.log(transcriptionText);
   const aiConversationResponseBody = {
     text: transcriptionText,
     prompt:
