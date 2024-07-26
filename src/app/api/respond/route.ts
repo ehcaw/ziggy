@@ -1,42 +1,35 @@
-//src/app/api/converse/route.ts
+//src/app/api/respond/route.ts
 
 import axios from "axios";
+import { NextResponse } from "next/server";
+import OpenAI from "openai";
 
-export default async function POST(request: Request) {
-  const userInput = await request.json();
+export async function POST(request: Request) {
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  let userInput = await request.json();
+  let { input, prompt } = userInput;
   try {
-    const textResponse = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content:
-              "Given a sentence or two, generate a response that pertains to the certain situation that you're put in. Reply as normally without quirk.",
-          },
-          {
-            role: "system",
-            content: userInput.data.prompt || "",
-          },
-          { role: "user", content: userInput.data.text },
-        ],
-      },
-    );
-    if (textResponse.status >= 200 && textResponse.status < 300) {
-      return textResponse.data.choices[0].message.content;
-    } else {
-      throw new Error("Failed to get response from OpenAI");
-    }
+    const textResponse = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content:
+            "Given a sentence or two, generate a response that pertains to the certain situation that you're put in. Reply as normally without quirk.",
+        },
+        {
+          role: "system",
+          content: prompt || "",
+        },
+        { role: "user", content: input },
+      ],
+      model: "gpt-4o-mini",
+      temperature: 0.7,
+    });
+    return new NextResponse(textResponse.choices[0].message.content);
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error(
-        "Axios error:",
-        error.response?.status,
-        error.response?.data,
-      );
-    } else {
-      console.error("Unknown error:", error);
-    }
+    console.error(error);
+    return new NextResponse("super duper error");
   }
 }
