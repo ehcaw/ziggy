@@ -80,7 +80,6 @@ export default function VocabGen() {
         const formData = new FormData();
         formData.append("file", audioFile);
         const transcription = await axios.post("/api/transcribe", formData);
-        console.log(transcription);
       };
     }
   };

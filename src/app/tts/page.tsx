@@ -57,12 +57,13 @@ export default function SimpleForm() {
   });
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      /*
       const aiResponse = await axios.post("/api/respond", {
         input: values.input,
         prompt: "",
       });
-      */
+      console.log(aiResponse);
+
+      /*
       const response = await fetch("/api/tts", {
         method: "POST",
         headers: {
@@ -79,6 +80,7 @@ export default function SimpleForm() {
       let audioBuffer = null;
 
       await streamAudio(reader, audioBuffer, audioContext, sourceNode);
+      */
     } catch (error) {
       console.error(error);
     }

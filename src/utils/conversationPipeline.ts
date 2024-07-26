@@ -1,27 +1,69 @@
 import axios from "axios";
 
-export async function converse(audioBlobs: BlobPart[], prompt?: string) {
-  const userSpeech = new Blob(audioBlobs, { type: "audio/wav" });
+async function streamAudio(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  audioBuffer: any,
+  audioContext: AudioContext,
+  sourceNode: any,
+) {
+  const chunks = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+
+  const audioData = new Uint8Array(
+    chunks.reduce((acc, chunk) => acc + chunk.length, 0),
+  );
+  let offset = 0;
+  for (const chunk of chunks) {
+    audioData.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  audioBuffer = await audioContext.decodeAudioData(audioData.buffer);
+  sourceNode = audioContext.createBufferSource();
+  sourceNode.buffer = audioBuffer;
+  sourceNode.connect(audioContext.destination);
+  sourceNode.start();
+}
+
+export async function conversationUtil(blob: Blob, prompt?: string) {
+  const userAudioFile = new File([blob], "audio.wav", { type: "audio/wav" });
   const formData = new FormData();
-  formData.append("file", userSpeech);
-  formData.append("model", "whisper-1");
-  formData.append("response_format", "text");
-  const transcription = await axios.post("/api/transcribe", { body: formData });
-  const transcriptionText = transcription.data.transcription.text;
-  console.log(transcriptionText);
-  const aiConversationResponseBody = {
-    text: transcriptionText,
-    prompt:
-      prompt ||
-      "You are a helpful assistant that is helping the user learn english. Start with simple conversations and slowly ramp up the difficulty",
-  };
-  const aiConversationResponse = await axios.post("/api/conversation", {
-    body: aiConversationResponseBody,
+  formData.append("file", userAudioFile);
+
+  let response = await axios.post("/api/transcribe", formData);
+  if (response.status !== 200) {
+    throw new Error("transcription response not ok");
+  }
+  const transcription = response.data.transcription.text;
+
+  response = await axios.post("/api/response", {
+    input: transcription,
+    prompt: prompt,
   });
-  const audioResponse = await axios.post("/api/textToSpeech/", {
-    body: {
-      input: aiConversationResponse.data.choices.message.content,
+  if (response.status !== 200) {
+    throw new Error("ai response not ok");
+  }
+  const aiResponse = response.data;
+
+  const chunks = [];
+  const tts = await fetch("/api/tts", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({ input: aiResponse }),
   });
-  return new Audio(audioResponse.data.audioBlob);
+  if (!tts.ok) {
+    throw new Error("respnse not ok");
+  }
+  const reader = tts.body!.getReader();
+  const audioContext = new window.AudioContext();
+  const sourceNode = audioContext.createBufferSource();
+  let audioBuffer = null;
+
+  return await streamAudio(reader, audioBuffer, audioContext, sourceNode);
 }
