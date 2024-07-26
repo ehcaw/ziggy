@@ -8,55 +8,60 @@ import { useMicVAD } from "@ricky0123/vad-react";
 import { Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMicrophone } from "../../hooks/useMicrophonePermissions";
-import { converse } from "@/utils/conversationPipeline";
+import { conversationUtil } from "@/utils/conversationPipeline";
+import axios from "axios";
 
 const ConversationComponent: React.FC<{}> = () => {
-  const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<BlobPart[]>([]);
   const [transcribedText, setTranscribedText] = useState<string>("");
   const [synthesizedText, setSynthesizedText] = useState<string>("");
-  const [currentAudioBit, setCurrentAudioBit] =
-    useState<HTMLAudioElement | null>(null);
+  const [microphoneBool, setMicrophoneBool] = useState<boolean>(false);
   const microphonePermissions = useMicrophone();
-  let audioBlobs: BlobPart[] = [];
 
   const startRecording = async () => {
-    const currentStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-    });
-    mediaRecorder.current = new MediaRecorder(currentStream, {
-      mimeType: "audio/webm",
-    });
-    mediaRecorder.current.start();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
 
-    mediaRecorder.current.ondataavailable = (event: { data: BlobPart }) => {
-      audioBlobs.push(event.data);
-    };
-    mediaRecorder.current.onstop = async () => {
-      console.log("MediaRecorder stopped", audioBlobs);
-      try {
-        const aiResponse = await converse(audioBlobs, "Hello");
-        aiResponse.play();
-      } catch (error) {
-        console.log("bruh error", error);
-      }
-    };
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.start();
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+    }
   };
+  const stopRecording = async () => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        audioChunksRef.current = [];
+        const conversation = conversationUtil(blob);
+      };
+    }
+  };
+
+  const handleToggle = (microphoneBool: boolean) => {
+    setMicrophoneBool(microphoneBool);
+  };
+
   const vadInstance = useMicVAD({
     startOnLoad: true,
     onSpeechStart: async () => {
-      if (currentAudioBit) {
-        currentAudioBit.pause();
-        setCurrentAudioBit(null);
-        console.log("ai response interrupted");
-      }
-      console.log("started speaking");
-      startRecording();
+      console.log("speech started");
+      await startRecording();
     },
     onSpeechEnd: async (audio) => {
-      console.log("ended speaking");
-      if (mediaRecorder.current) {
-        mediaRecorder.current.stop();
-      }
+      console.log("speech ended");
+      await stopRecording();
     },
     preSpeechPadFrames: 5,
     positiveSpeechThreshold: 0.9,
@@ -66,8 +71,8 @@ const ConversationComponent: React.FC<{}> = () => {
 
   useEffect(() => {
     return () => {
-      if (mediaRecorder.current) {
-        mediaRecorder.current.stop();
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
       }
     };
   });
