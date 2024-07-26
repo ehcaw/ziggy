@@ -76,7 +76,10 @@ export default function VocabGen() {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setCurrentAudioBlob(blob);
         audioChunksRef.current = [];
-        const transcription = await transcribeUtil(blob);
+        const audioFile = new File([blob], "audio.wav", { type: "audio/wav" });
+        const formData = new FormData();
+        formData.append("file", audioFile);
+        const transcription = await axios.post("/api/transcribe", formData);
         console.log(transcription);
       };
     }

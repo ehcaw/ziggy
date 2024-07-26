@@ -2,12 +2,8 @@ import { NextResponse } from "next/server";
 import { Uploadable } from "openai/uploads.mjs";
 import OpenAI from "openai";
 
-const openaikey = process.env.OPENAI_SECRET_KEY;
-const openai = new OpenAI({
-  apiKey: openaikey,
-});
-
 export async function POST(request: Request) {
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   try {
     const formData = await request.formData();
     const audioFile = formData.get("file");
