@@ -20,6 +20,11 @@ export async function POST(request: Request) {
         },
         {
           role: "system",
+          content:
+            "Keep your answer short. One or two sentences max. If you cannot fit the response in 1 or 2 sentences, ask a clarifying question to narrow the topic down.",
+        },
+        {
+          role: "system",
           content: prompt || "",
         },
         { role: "user", content: input },

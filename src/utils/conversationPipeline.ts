@@ -29,7 +29,11 @@ async function streamAudio(
   sourceNode.start();
 }
 
-export async function conversationUtil(blob: Blob, prompt?: string) {
+export async function conversationUtil(
+  blob: Blob,
+  prompt?: string,
+  max_tokens?: number,
+) {
   const userAudioFile = new File([blob], "audio.wav", { type: "audio/wav" });
   const formData = new FormData();
   formData.append("file", userAudioFile);
@@ -39,15 +43,18 @@ export async function conversationUtil(blob: Blob, prompt?: string) {
     throw new Error("transcription response not ok");
   }
   const transcription = response.data.transcription.text;
+  console.log(transcription);
 
-  response = await axios.post("/api/response", {
+  const resp = await axios.post("/api/respond", {
     input: transcription,
     prompt: prompt,
+    max_tokens: max_tokens,
   });
-  if (response.status !== 200) {
+  if (resp.status !== 200) {
     throw new Error("ai response not ok");
   }
-  const aiResponse = response.data;
+  const aiResponse = resp.data;
+  console.log(aiResponse);
 
   const chunks = [];
   const tts = await fetch("/api/tts", {

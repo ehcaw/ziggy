@@ -29,24 +29,27 @@ const ConversationComponent: React.FC<{}> = () => {
           audioChunksRef.current.push(event.data);
         }
       };
+      mediaRecorderRef.current.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        console.log(blob);
+        audioChunksRef.current = [];
+        const conversation = conversationUtil(blob);
+      };
 
       mediaRecorderRef.current.start();
+      console.log("recording started");
     } catch (error) {
       console.error("Error accessing microphone:", error);
     }
   };
   const stopRecording = async () => {
+    console.log("stopped recording");
+    console.log(mediaRecorderRef.current);
     if (
       mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !== "inactive"
-    ) {
+      mediaRecorderRef.current.state == "inactive"
+    )
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.onstop = async () => {
-        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        audioChunksRef.current = [];
-        const conversation = conversationUtil(blob);
-      };
-    }
   };
 
   const handleToggle = (microphoneBool: boolean) => {
@@ -56,11 +59,9 @@ const ConversationComponent: React.FC<{}> = () => {
   const vadInstance = useMicVAD({
     startOnLoad: true,
     onSpeechStart: async () => {
-      console.log("speech started");
       await startRecording();
     },
     onSpeechEnd: async (audio) => {
-      console.log("speech ended");
       await stopRecording();
     },
     preSpeechPadFrames: 5,
