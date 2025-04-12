@@ -18,6 +18,19 @@ const ConversationComponent: React.FC<{}> = () => {
   const [synthesizedText, setSynthesizedText] = useState<string>("");
   const [microphoneBool, setMicrophoneBool] = useState<boolean>(false);
   const microphonePermissions = useMicrophone();
+  const vadInstanceRef = useRef<{
+    listening: boolean;
+    errored:
+      | false
+      | {
+          message: string;
+        };
+    loading: boolean;
+    userSpeaking: boolean;
+    pause: () => void;
+    start: () => void;
+    toggle: () => void;
+  }>(null);
 
   const startRecording = async () => {
     try {
@@ -30,10 +43,13 @@ const ConversationComponent: React.FC<{}> = () => {
         }
       };
       mediaRecorderRef.current.onstop = async () => {
+        console.log("media recorder stopped");
+        /*
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         console.log(blob);
         audioChunksRef.current = [];
         const conversation = conversationUtil(blob);
+        */
       };
 
       mediaRecorderRef.current.start();
@@ -44,31 +60,35 @@ const ConversationComponent: React.FC<{}> = () => {
   };
   const stopRecording = async () => {
     console.log("stopped recording");
+    /*
     console.log(mediaRecorderRef.current);
     if (
       mediaRecorderRef.current &&
       mediaRecorderRef.current.state == "inactive"
     )
       mediaRecorderRef.current.stop();
+      */
   };
 
   const handleToggle = (microphoneBool: boolean) => {
     setMicrophoneBool(microphoneBool);
   };
 
-  const vadInstance = useMicVAD({
-    startOnLoad: true,
-    onSpeechStart: async () => {
-      await startRecording();
-    },
-    onSpeechEnd: async (audio) => {
-      await stopRecording();
-    },
-    preSpeechPadFrames: 5,
-    positiveSpeechThreshold: 0.9,
-    negativeSpeechThreshold: 0.6,
-    redemptionFrames: 7,
-  });
+  useEffect(() => {
+    vadInstanceRef.current = useMicVAD({
+      startOnLoad: true,
+      onSpeechStart: async () => {
+        await startRecording();
+      },
+      onSpeechEnd: async (audio) => {
+        await stopRecording();
+      },
+      preSpeechPadFrames: 5,
+      positiveSpeechThreshold: 0.9,
+      negativeSpeechThreshold: 0.6,
+      redemptionFrames: 7,
+    });
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -94,9 +114,13 @@ const ConversationComponent: React.FC<{}> = () => {
             }}
             className="mt-4" // Add margin-top for spacing if needed
           >
-            {vadInstance.userSpeaking && <Mic className="h-4 w-4" />}
+            {vadInstanceRef.current && vadInstanceRef.current.userSpeaking && (
+              <Mic className="h-4 w-4" />
+            )}
 
-            {!vadInstance.userSpeaking && <MicOff className="h-4 w-4" />}
+            {vadInstanceRef.current && !vadInstanceRef.current.userSpeaking && (
+              <MicOff className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>

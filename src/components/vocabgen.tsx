@@ -6,7 +6,6 @@ import { useMicrophone } from "@/hooks/useMicrophonePermissions";
 import axios from "axios";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
-import { transcribeUtil } from "@/utils/openai";
 
 export default function VocabGen() {
   const [vocabWord, setVocabWord] = useState<string>("hello world");
@@ -80,6 +79,7 @@ export default function VocabGen() {
         const formData = new FormData();
         formData.append("file", audioFile);
         const transcription = await axios.post("/api/transcribe", formData);
+        console.log(transcription);
       };
     }
   };

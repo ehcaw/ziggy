@@ -54,7 +54,7 @@ export default function Component() {
               Our English learning app offers a comprehensive and personalized
               approach to help you improve your language skills. With
               interactive lessons, engaging content, and personalized feedback,
-              you'll be speaking English with confidence in no time.
+              you`&apos;`ll be speaking English with confidence in no time.
             </p>
           </div>
         </section>
